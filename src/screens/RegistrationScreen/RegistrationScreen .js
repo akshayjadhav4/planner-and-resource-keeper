@@ -1,5 +1,12 @@
-import React from "react";
-import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import {
+  Alert,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scrollview";
 import styles from "./styles";
 import { Formik } from "formik";
@@ -19,11 +26,13 @@ const registrationSchema = Yup.object({
 });
 
 export default function RegistrationScreen({ navigation }) {
+  const [isLoading, setIsLoading] = useState(false);
   const onFooterLinkPress = () => {
     navigation.navigate("Login");
   };
 
   const onRegisterPress = (values, actions) => {
+    setIsLoading(true);
     actions.resetForm();
     firebase
       .auth()
@@ -40,13 +49,18 @@ export default function RegistrationScreen({ navigation }) {
           .doc(uid)
           .set(data)
           .then(() => {
+            setIsLoading(false);
             navigation.navigate("Home", { user: data });
           })
           .catch((error) => {
+            setIsLoading(false);
             alert(error.message);
           });
       })
-      .catch((error) => alert(error.message));
+      .catch((error) => {
+        setIsLoading(false);
+        alert(error.message);
+      });
   };
 
   return (
@@ -125,6 +139,7 @@ export default function RegistrationScreen({ navigation }) {
                 {formik.touched.confirmPassword &&
                   formik.errors.confirmPassword}
               </Text>
+              {isLoading && <ActivityIndicator color="#788eec" />}
               <TouchableOpacity
                 style={styles.button}
                 onPress={formik.handleSubmit}

@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Keyboard,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scrollview";
 import styles from "./styles";
@@ -20,6 +21,8 @@ const addModuleSchema = Yup.object({
 export default function AddModule({ route, navigation }) {
   const { projectDetail } = route.params;
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const userID = projectDetail.authorId;
   const projectID = projectDetail.id;
   const moduleRef = firebase
@@ -31,6 +34,7 @@ export default function AddModule({ route, navigation }) {
     .collection("modules");
 
   const onCreatePress = (values, actions) => {
+    setIsLoading(true);
     actions.resetForm();
     const timestamp = firebase.firestore.FieldValue.serverTimestamp();
     const data = {
@@ -45,9 +49,13 @@ export default function AddModule({ route, navigation }) {
       .add(data)
       .then((doc) => {
         Keyboard.dismiss();
+        setIsLoading(false);
         navigation.navigate("ProjectView");
       })
-      .catch((error) => alert(error.message));
+      .catch((error) => {
+        setIsLoading(false);
+        alert(error.message);
+      });
   };
 
   return (
@@ -97,7 +105,7 @@ export default function AddModule({ route, navigation }) {
               <Text style={styles.errorText}>
                 {formik.touched.description && formik.errors.description}
               </Text>
-
+              {isLoading && <ActivityIndicator color="#788eec" />}
               <TouchableOpacity
                 style={styles.button}
                 onPress={formik.handleSubmit}

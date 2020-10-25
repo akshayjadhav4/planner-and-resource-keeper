@@ -1,5 +1,11 @@
-import React from "react";
-import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import React, { useState } from "react";
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  ActivityIndicator,
+} from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scrollview";
 import styles from "./styles";
 import { Formik } from "formik";
@@ -14,11 +20,14 @@ const LoginSchema = Yup.object({
 });
 
 export default function LoginScreen({ navigation }) {
+  const [isLoading, setIsLoading] = useState(false);
+
   const onFooterLinkPress = () => {
     navigation.navigate("Registration");
   };
 
   const onLoginPress = (values, actions) => {
+    setIsLoading(true);
     actions.resetForm();
     firebase
       .auth()
@@ -35,13 +44,16 @@ export default function LoginScreen({ navigation }) {
               return;
             }
             const user = firestoreDocument.data();
+            setIsLoading(false);
             navigation.navigate("Home", { user });
           })
           .catch((error) => {
+            setIsLoading(false);
             alert(error);
           });
       })
       .catch((error) => {
+        setIsLoading(false);
         alert(error);
       });
   };
@@ -89,6 +101,7 @@ export default function LoginScreen({ navigation }) {
               <Text style={styles.errorText}>
                 {formik.touched.password && formik.errors.password}
               </Text>
+              {isLoading && <ActivityIndicator color="#788eec" />}
 
               <TouchableOpacity
                 style={styles.button}

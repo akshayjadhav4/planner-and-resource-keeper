@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FlatList,
   Keyboard,
@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scrollview";
 import styles from "./styles";
@@ -21,6 +22,8 @@ const addProjectSchema = Yup.object({
 export default function AddProject({ route, navigation }) {
   const { user } = route.params;
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const userID = user.id;
   const projectRef = firebase
     .firestore()
@@ -29,6 +32,7 @@ export default function AddProject({ route, navigation }) {
     .collection("projects");
 
   const onCreatePress = (values, actions) => {
+    setIsLoading(true);
     actions.resetForm();
     const timestamp = firebase.firestore.FieldValue.serverTimestamp();
     const data = {
@@ -42,9 +46,13 @@ export default function AddProject({ route, navigation }) {
       .add(data)
       .then((doc) => {
         Keyboard.dismiss();
+        setIsLoading(false);
         navigation.navigate("Home");
       })
-      .catch((error) => alert(error.message));
+      .catch((error) => {
+        setIsLoading(false);
+        alert(error.message);
+      });
   };
 
   return (
@@ -91,7 +99,7 @@ export default function AddProject({ route, navigation }) {
               <Text style={styles.errorText}>
                 {formik.touched.description && formik.errors.description}
               </Text>
-
+              {isLoading && <ActivityIndicator color="#788eec" />}
               <TouchableOpacity
                 style={styles.button}
                 onPress={formik.handleSubmit}
